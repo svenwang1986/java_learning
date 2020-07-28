@@ -22,9 +22,14 @@ public class DFSFileTrans {
         //2、将文件按块大小 分别写到对应的节点上
 
         //计算一共需要分几块，默认4M一个块
-        int blockSize = Integer.parseInt(PropertiesDFSUtil.getProperty("block_size", "4194304"));
-        int blockNum = (int) Math.ceil(sourceFile.length() / blockSize);
 
+        int blockSize = Integer.parseInt(PropertiesDFSUtil.getProperty("block_size", "4194304"));
+        long length = new File(sourceFile).length();
+        double blockNumTemp = length *1D / blockSize;
+        int blockNum = (int) Math.ceil(blockNumTemp);
+
+        if (blockNum == 0)
+            blockNum = 1;
 
         // 公共输入流
         InputStream fin = null;
@@ -74,14 +79,22 @@ public class DFSFileTrans {
         for (int i = 1; i < choosedServers.size(); i++) {
             String outPath = choosedServers.get(i).getServerPath()
                     + File.separator
-                    + distFileDir
-                    + File.separator
-                    + blockID;
+                    + distFileDir;
+
+            File dir = new File(outPath);
+
+            if (!dir.exists()){
+                dir.mkdirs();
+            }
+
+            String outFile = outPath + File.separator + blockID;
+
+
 
             try {
                 FileInputStream fin = new FileInputStream(dfsPath + File.separator + blockID);
 
-                FileOutputStream fout = new FileOutputStream(outPath);
+                FileOutputStream fout = new FileOutputStream(outFile);
 
 
                 int bufferSize = 4096;
